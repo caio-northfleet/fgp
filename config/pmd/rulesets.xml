@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ruleset name="Base ruleset" xmlns="http://pmd.sourceforge.net/ruleset/2.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://pmd.sourceforge.net/ruleset/2.0.0 http://pmd.sourceforge.net/ruleset_2_0_0.xsd">
+
+    <!-- Basic (https://pmd.github.io/pmd-5.4.0/pmd-java/rules/java/basic.html) -->
+    <rule ref="rulesets/java/basic.xml"/>
+
+    <!-- Braces (https://pmd.github.io/pmd-5.4.0/pmd-java/rules/java/braces.html) -->
+    <rule ref="rulesets/java/braces.xml"/>
+
+    <!-- Empty Code (https://pmd.github.io/pmd-5.4.0/pmd-java/rules/java/empty.html) -->
+    <rule ref="rulesets/java/empty.xml"/>
+
+    <!-- Java Logging (https://pmd.github.io/pmd-5.4.0/pmd-java/rules/java/logging-java.html) -->
+    <rule ref="rulesets/java/logging-java.xml"/>
+
+    <!-- Import Statements (https://pmd.github.io/pmd-5.4.0/pmd-java/rules/java/imports.html) -->
+    <rule ref="rulesets/java/imports.xml"/>
+    <rule ref="rulesets/java/imports.xml/TooManyStaticImports">
+        <properties>
+            <property name="maximumStaticImports" value="0"/>
+        </properties>
+    </rule>
+
+    <!-- Optimization (https://pmd.github.io/pmd-5.4.0/pmd-java/rules/java/optimizations.html) -->
+    <rule ref="rulesets/java/optimizations.xml"/>
+
+    <!-- Security Code Guidelines (https://pmd.github.io/pmd-5.4.0/pmd-java/rules/java/sunsecure.html) -->
+    <rule ref="rulesets/java/sunsecure.xml"/>
+
+    <!-- Type Resolution (https://pmd.github.io/pmd-5.4.0/pmd-java/rules/java/typeresolution.html) -->
+    <rule ref="rulesets/java/typeresolution.xml"/>
+
+    <!-- Unnecessary (https://pmd.github.io/pmd-5.4.0/pmd-java/rules/java/unnecessary.html) -->
+    <rule ref="rulesets/java/unnecessary.xml"/>
+
+    <!-- Unused Code (https://pmd.github.io/pmd-5.4.0/pmd-java/rules/java/unusedcode.html) -->
+    <rule ref="rulesets/java/unusedcode.xml"/>
+</ruleset>

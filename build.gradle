@@ -1,0 +1,238 @@
+
+// PROJECT BASICS {
+allprojects {
+    apply plugin: 'java'
+    group 'com.flaregames'
+    version '1.0.0-SNAPSHOT'
+    sourceCompatibility = 1.8
+
+    repositories {
+        mavenCentral()
+    }
+
+    sourceSets {
+        main {
+            output.resourcesDir = 'build/classes/main'
+            output.classesDir = 'build/classes/main'
+        }
+        test {
+            output.resourcesDir = 'build/classes/test'
+            output.classesDir = 'build/classes/test'
+        }
+    }
+
+    jar.duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+
+    test {
+        maxParallelForks = 1
+        forkEvery = 10
+    }
+
+    clean.doLast {
+        file("${projectDir}/logs").deleteDir()
+        file("${projectDir}/tmp").deleteDir()
+    }
+}
+
+task generate(dependsOn: ['clean', 'build'])
+build.mustRunAfter 'clean'
+
+dependencies {
+    testCompile 'junit:junit:4.12'
+}
+// } PROJECT BASICS
+
+
+// JAVADOC {
+allprojects {
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.allSource
+    }
+
+    task javadocJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    tasks.withType(Javadoc) {
+        def outputEvents = []
+        def listener = { outputEvents << it } as StandardOutputListener
+        doFirst {
+            logging.addStandardErrorListener(listener)
+            logging.addStandardOutputListener(listener)
+        }
+        doLast {
+            logging.removeStandardOutputListener(listener)
+            logging.removeStandardErrorListener(listener)
+            outputEvents.each { e ->
+                if (e.toString() =~ " warning: ") {
+                    throw new GradleException("You have some javadoc warnings, please fix them!")
+                }
+            }
+        }
+    }
+
+    artifacts {
+        archives sourcesJar
+        archives javadocJar
+    }
+}
+// } JAVADOC
+
+
+// JACOCO {
+allprojects {
+    apply plugin: 'jacoco'
+
+    jacoco {
+        toolVersion = "+"
+    }
+
+    jacocoTestReport {
+        reports {
+            html.setEnabled(true)
+        }
+    }
+}
+// } JACOCO
+
+
+// CHECKSTYLE {
+allprojects {
+    apply plugin: 'checkstyle'
+    apply plugin: 'maven-publish'
+
+    configurations {
+        checkstyleConfig
+    }
+
+    checkstyle {
+        toolVersion = '8.5'
+    }
+
+    dependencies {
+        checkstyleConfig 'com.puppycrawl.tools:checkstyle:8.5'
+    }
+
+    task verifyNoCheckstyleWarnings {
+        doLast {
+            def checkstyleMainWarningsFile = "$reporting.baseDir/checkstyle/main.xml"
+            def checkstyleTestWarningsFile = "$reporting.baseDir/checkstyle/test.xml"
+            File mainWarningsFile = file(checkstyleMainWarningsFile)
+            File testWarningsFile = file(checkstyleTestWarningsFile)
+            if (mainWarningsFile.exists() && mainWarningsFile.text.contains("<error ")) {
+                throw new GradleException("There were Checkstyle warnings! For more info check $mainWarningsFile")
+            }
+            if (testWarningsFile.exists() && testWarningsFile.text.contains("<error ")) {
+                throw new GradleException("There were Checkstyle warnings! For more info check $testWarningsFile")
+            }
+        }
+    }
+
+    tasks.withType(Checkstyle) {
+        configFile = file("$rootDir/config/checkstyle/checkstyle.xml")
+        finalizedBy verifyNoCheckstyleWarnings
+    }
+}
+// } CHECKSTYLE
+
+
+// FINDBUGS {
+allprojects {
+    apply plugin: "findbugs"
+
+    findbugs {
+        ignoreFailures = false
+    }
+
+    task findBugsReport {
+        doLast {
+            def findbugsMain = "$reporting.baseDir/findbugs/main.xml"
+            File mainWarningsFile = file(findbugsMain)
+            def findbugsTest = "$reporting.baseDir/findbugs/test.xml"
+            File testWarningsFile = file(findbugsTest)
+
+            def pattern = /(?s).*total_bugs="[1-9][0-9]*".*/
+
+            if (mainWarningsFile.exists() && mainWarningsFile.text ==~ pattern) {
+                def reportOutputLocation = "$reporting.baseDir/findbugs/main.html"
+                File reportOutputFile = file(reportOutputLocation)
+                ant.xslt(
+                        in: mainWarningsFile,
+                        style: "$rootDir/config/findbugs/default.xsl",
+                        out: reportOutputFile)
+                throw new GradleException("There were Findbugs warnings! For more info check ${reportOutputLocation}")
+            }
+
+            if (testWarningsFile.exists() && testWarningsFile.text ==~ pattern) {
+                def reportOutputLocation = "$reporting.baseDir/findbugs/test.html"
+                File reportOutputFile = file(reportOutputLocation)
+                ant.xslt(
+                        in: testWarningsFile,
+                        style: "$rootDir/config/findbugs/default.xsl",
+                        out: reportOutputFile)
+                throw new GradleException("There were Findbugs warnings! For more info check ${reportOutputLocation}")
+            }
+        }
+    }
+
+    tasks.withType(FindBugs) {
+        reports {
+            xml.enabled = true
+            xml.withMessages = true
+            html.enabled = false
+        }
+        finalizedBy findBugsReport
+    }
+}
+// } FINDBUGS
+
+// PMD {
+allprojects {
+    apply plugin: "pmd"
+
+    pmd {
+        ignoreFailures = true
+        ruleSetFiles = files("$rootDir/config/pmd/rulesets.xml")
+    }
+
+    task ('pmdReport') {
+        doLast {
+            def pmdMain = "$reporting.baseDir/pmd/main.xml"
+            def pmdTest = "$reporting.baseDir/pmd/test.xml"
+            File mainWarningsFile = file(pmdMain)
+            File testWarningsFile = file(pmdTest)
+
+            if (mainWarningsFile.exists() && mainWarningsFile.text.contains("file name=")) {
+                def reportOutputLocation = "$reporting.baseDir/pmd/main.html"
+                File reportOutputFile = file(reportOutputLocation)
+                ant.xslt(
+                        in: mainWarningsFile,
+                        style: "$rootDir/config/pmd/pmd-report.xslt",
+                        out: reportOutputFile)
+                throw new GradleException("There were PMD warnings! For more info check ${reportOutputLocation}")
+            }
+
+            if (testWarningsFile.exists() && testWarningsFile.text.contains("file name=")) {
+                def reportOutputLocation = "$reporting.baseDir/pmd/test.html"
+                File reportOutputFile = file(reportOutputLocation)
+                ant.xslt(
+                        in: testWarningsFile,
+                        style: "$rootDir/config/pmd/pmd-report.xslt",
+                        out: reportOutputFile)
+                throw new GradleException("There were PMD warnings! For more info check ${reportOutputLocation}")
+            }
+        }
+    }
+
+    tasks.withType(Pmd) {
+        reports {
+            xml.setEnabled(true)
+            html.setEnabled(false)
+        }
+        finalizedBy 'pmdReport'
+    }
+
+}
+// } PMD
