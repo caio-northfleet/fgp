@@ -1,5 +1,8 @@
 package com.flaregames.poker.datatypes;
 
+import com.google.common.base.MoreObjects;
+import com.google.common.base.Objects;
+
 import com.flaregames.poker.enums.ECardSuit;
 import com.flaregames.poker.enums.ECardValue;
 import com.flaregames.poker.exceptions.InvalidCardInputException;
@@ -87,5 +90,49 @@ public final class Card {
    */
   public ECardValue getValue() {
     return value;
+  }
+
+  /**
+   * Compares this object instance with another object to check if they are equal.
+   *
+   * @param obj object to compare
+   * @return {@code true} if objects are equal, {@code false} otherwise
+   */
+  @Override
+  public boolean equals(final Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (!(obj instanceof Card)) {
+      return false;
+    }
+    final Card card = (Card) obj;
+    return Objects.equal(getSuit(), card.getSuit())
+        && Objects.equal(getValue(), card.getValue());
+  }
+
+  /**
+   * Generates an integer value from this object instance attributes.
+   *
+   * @return an integer representation of this object
+   */
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(
+        getSuit(),
+        getValue());
+  }
+
+  /**
+   * Generates a string value from this object instance attributes.
+   *
+   * @return a string representation of this object
+   */
+  @Override
+  public String toString() {
+    return MoreObjects.toStringHelper("Card")
+        .add("suit", suit)
+        .add("value", value)
+        .toString();
   }
 }

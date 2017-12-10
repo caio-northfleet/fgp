@@ -8,19 +8,19 @@ package com.flaregames.poker.enums;
  */
 public enum ECardValue {
 
-  TWO('2', 0),
-  THREE('3', 1),
-  FOUR('4', 2),
-  FIVE('5', 3),
-  SIX('6', 4),
-  SEVEN('7', 5),
-  EIGHT('8', 6),
-  NINE('9', 7),
-  TEN('T', 8),
-  JACK('J', 9),
-  QUEEN('Q', 10),
-  KING('K', 11),
-  ACE('A', 12);
+  TWO('2', 1),
+  THREE('3', 2),
+  FOUR('4', 3),
+  FIVE('5', 4),
+  SIX('6', 5),
+  SEVEN('7', 6),
+  EIGHT('8', 7),
+  NINE('9', 8),
+  TEN('T', 9),
+  JACK('J', 10),
+  QUEEN('Q', 11),
+  KING('K', 12),
+  ACE('A', 13);
 
   private char cardId;
   private int cardValue;
