@@ -1,5 +1,11 @@
-package com.flaregames.poker;
+package com.flaregames.poker.enums;
 
+/**
+ * The card value definition.
+ *
+ * @author Caio Northfleet (caio.northfleet@gmail.com)
+ * @since 10/12/2017
+ */
 public enum ECardValue {
 
   TWO('2', 0),

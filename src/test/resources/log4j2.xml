@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="WARN" monitorInterval="30">
+    <Properties>
+        <Property name="baseDir">logs</Property>
+    </Properties>
+    <Appenders>
+        <RollingFile name="RollingFile" fileName="${baseDir}/poker.log" filePattern="${baseDir}/poker_%d{yyyyMMdd}.zip">
+            <PatternLayout pattern="[%d{yyyyMMdd-HHmmss.SSS} %-5level] [%class{1}.%method] %msg%n"/>
+            <Policies>
+                <TimeBasedTriggeringPolicy/>
+                <SizeBasedTriggeringPolicy size="50 MB"/>
+            </Policies>
+            <DefaultRolloverStrategy>
+                <Delete basePath="${baseDir}" maxDepth="1">
+                    <IfAny>
+                        <IfAccumulatedFileSize exceeds="500 MB"/>
+                        <IfAccumulatedFileCount exceeds="10"/>
+                        <IfLastModified age="3d"/>
+                    </IfAny>
+                </Delete>
+            </DefaultRolloverStrategy>
+        </RollingFile>
+
+        <Console name="Console" target="SYSTEM_OUT">
+            <PatternLayout pattern="[%d{yyyyMMdd-HHmmss.SSS} %-5level] [%logger{36}] [%class{1}.%method] %msg%n"/>
+        </Console>
+
+    </Appenders>
+    <Loggers>
+        <Root level="DEBUG">
+            <AppenderRef ref="Console"/>
+            <AppenderRef ref="RollingFile"/>
+        </Root>
+    </Loggers>
+</Configuration>
