@@ -31,6 +31,7 @@ allprojects {
     clean.doLast {
         file("${projectDir}/logs").deleteDir()
         file("${projectDir}/tmp").deleteDir()
+        file("${projectDir}/out").deleteDir()
     }
 }
 
@@ -38,6 +39,8 @@ task generate(dependsOn: ['clean', 'build'])
 build.mustRunAfter 'clean'
 
 dependencies {
+    compile 'com.google.guava:guava:23.0'
+
     testCompile 'junit:junit:4.12'
 }
 // } PROJECT BASICS
@@ -108,11 +111,11 @@ allprojects {
     }
 
     checkstyle {
-        toolVersion = '8.5'
+        toolVersion = '6.18'
     }
 
     dependencies {
-        checkstyleConfig 'com.puppycrawl.tools:checkstyle:8.5'
+        checkstyleConfig 'com.puppycrawl.tools:checkstyle:6.18'
     }
 
     task verifyNoCheckstyleWarnings {
