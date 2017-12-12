@@ -15,7 +15,7 @@ import com.flaregames.poker.exceptions.InvalidCardInputException;
  * @see ECardValue
  * @since 10/12/2017
  */
-public final class Card {
+public final class Card implements Comparable<Card> {
 
   /**
    * The card suit.
@@ -134,5 +134,21 @@ public final class Card {
         .add("suit", suit)
         .add("value", value)
         .toString();
+  }
+
+  /**
+   * Compares this object with the specified object for order.
+   *
+   * @param other the object to be compared
+   * @return a negative integer, zero, or a positive integer as this object is less than, equal to,
+   *     or greater than the specified object.
+   * @throws NullPointerException if the specified object is null
+   */
+  @Override
+  public int compareTo(final Card other) {
+    if (other == null) {
+      throw new NullPointerException();
+    }
+    return this.getValue().compareTo(other.getValue());
   }
 }

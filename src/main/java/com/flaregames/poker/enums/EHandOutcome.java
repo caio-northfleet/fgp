@@ -5,23 +5,23 @@ import com.google.common.base.Ascii;
 public enum EHandOutcome {
 
   HIGH_CARD(1),
-  PAIR(10),
-  TWO_PAIRS(20),
-  THREE_OF_A_KIND(30),
-  STRAIGHT(40),
-  FLUSH(50),
-  FULL_HOUSE(60),
-  FOUR_OF_A_KIND(70),
-  STRAIGHT_FLUSH(80);
+  PAIR(2),
+  TWO_PAIRS(3),
+  THREE_OF_A_KIND(4),
+  STRAIGHT(5),
+  FLUSH(6),
+  FULL_HOUSE(7),
+  FOUR_OF_A_KIND(8),
+  STRAIGHT_FLUSH(9);
 
-  private int multiplier;
+  private int weight;
 
-  EHandOutcome(final int multiplier) {
-    this.multiplier = multiplier;
+  EHandOutcome(final int weight) {
+    this.weight = weight;
   }
 
-  public int getMultiplier() {
-    return multiplier;
+  public int getWeight() {
+    return weight;
   }
 
   @Override

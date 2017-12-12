@@ -2,6 +2,8 @@ package com.flaregames.poker;
 
 import com.flaregames.poker.datatypes.Card;
 import com.flaregames.poker.datatypes.Hand;
+import com.flaregames.poker.enums.ECardSuit;
+import com.flaregames.poker.enums.ECardValue;
 import com.flaregames.poker.enums.EHandOutcome;
 import com.flaregames.poker.exceptions.InvalidCardInputException;
 import com.flaregames.poker.exceptions.InvalidHandSizeException;
@@ -12,11 +14,14 @@ import org.slf4j.LoggerFactory;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Arrays;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.Scanner;
+import java.util.Set;
+import java.util.TreeMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-@SuppressWarnings("PMD.SystemPrintln")
 public final class Poker {
 
   /**
@@ -35,6 +40,7 @@ public final class Poker {
    * @param args command line arguments
    * @throws FileNotFoundException if the input file is not found
    */
+  @SuppressWarnings("PMD.SystemPrintln")
   public static void main(final String[] args)
       throws FileNotFoundException {
 
@@ -46,27 +52,26 @@ public final class Poker {
     final String rawHandInput2 = scanner.nextLine();
 
     final Poker poker = new Poker();
-
-    final Hand hand1;
-    final Hand hand2;
     try {
-      hand1 = poker.validateAndProcessInput(rawHandInput1);
-      hand2 = poker.validateAndProcessInput(rawHandInput2);
+      System.out.println(poker.compareHands(rawHandInput1, rawHandInput2));
     } catch (final InvalidHandSizeException | InvalidCardInputException ex) {
       logger.error("Could not handle input.", ex);
-      return;
     }
+  }
 
-    final int result1 = poker.evaluateHand(hand1);
-    final int result2 = poker.evaluateHand(hand2);
+  String compareHands(final String rawHandInput1, final String rawHandInput2)
+      throws InvalidHandSizeException, InvalidCardInputException {
 
-    if (result1 > result2) {
-      System.out.println(String.format("1st hand wins! (%s)", poker.translateResult(result1)));
-    } else if (result2 > result1) {
-      System.out.println(String.format("2nd hand wins! (%s)", poker.translateResult(result2)));
-    } else {
-      System.out.println(String.format("It is a (%s) tie!", poker.translateResult(result1)));
+    final EHandOutcome outcome1 = evaluateHand(validateAndProcessInput(rawHandInput1));
+    final EHandOutcome outcome2 = evaluateHand(validateAndProcessInput(rawHandInput2));
+
+    if (outcome1.compareTo(outcome2) > 0) {
+      return String.format("1st hand wins! (%s)", outcome1);
     }
+    if (outcome1.compareTo(outcome2) < 0) {
+      return String.format("2nd hand wins! (%s)", outcome2);
+    }
+    return String.format("It is a (%s) tie!", outcome1);
   }
 
   private Hand validateAndProcessInput(final String rawHandInput)
@@ -87,19 +92,87 @@ public final class Poker {
     return Hand.of(Arrays.asList(cards));
   }
 
-  private int evaluateHand(final Hand hand) {
-    logger.info(String.format("Evaluating hand [%s]...", hand));
+  EHandOutcome evaluateHand(final Hand hand) {
 
-    // TODO real evaluation
+    final Map<Card, Integer> map = new TreeMap<>();
 
-    return 0;
+    for (final Card card : hand.getCards()) {
+      map.compute(card, (card1, count) -> count != null ? count + 1 : 1);
+    }
+
+    if (map.size() == 2) {
+      final Integer firstValue = map.values().iterator().next();
+      if (firstValue == 1 || firstValue == 4) {
+        return EHandOutcome.FOUR_OF_A_KIND;
+      } else {
+        return EHandOutcome.FULL_HOUSE;
+      }
+    }
+
+    if (map.size() == 3) {
+      for (final Integer count : map.values()) {
+        if (count == 3) {
+          return EHandOutcome.THREE_OF_A_KIND;
+        }
+      }
+      return EHandOutcome.TWO_PAIRS;
+    }
+
+    if (map.size() == 4) {
+      return EHandOutcome.PAIR;
+    }
+
+    if (map.size() == 5) {
+      if (allSameSuit(map.keySet())) {
+        if (consecutiveValues(map.keySet())) {
+          return EHandOutcome.STRAIGHT_FLUSH;
+        } else {
+          return EHandOutcome.FLUSH;
+        }
+      } else {
+        if (consecutiveValues(map.keySet())) {
+          return EHandOutcome.STRAIGHT;
+        }
+      }
+    }
+
+    return EHandOutcome.HIGH_CARD;
   }
 
-  private String translateResult(final int result) {
-    logger.info(String.format("Translating result [%d]...", result));
+  private boolean consecutiveValues(final Set<Card> cards) {
 
-    // TODO real translation
+    final Iterator<Card> cardIterator = cards.iterator();
+    final ECardValue firstCardValue = cardIterator.next().getValue();
+    ECardValue previousCardValue = firstCardValue;
+    boolean consecutiveValues = true;
+    int count = 1;
+    while (cardIterator.hasNext()) {
+      final ECardValue cardValue = cardIterator.next().getValue();
+      if (cardValue.getCardValue() != previousCardValue.getCardValue() + 1) {
+        final boolean aceAsOne = count == cards.size() - 1
+            && cardValue.equals(ECardValue.ACE) && firstCardValue.equals(ECardValue.TWO);
+        if (!aceAsOne) {
+          consecutiveValues = false;
+          break;
+        }
+      }
+      previousCardValue = cardValue;
+      count++;
+    }
+    return consecutiveValues;
+  }
 
-    return EHandOutcome.FOUR_OF_A_KIND.toString();
+  private boolean allSameSuit(final Set<Card> cards) {
+    final Iterator<Card> cardIterator = cards.iterator();
+    final ECardSuit firstCardSuit = cardIterator.next().getSuit();
+    boolean allSameSuit = true;
+    while (cardIterator.hasNext()) {
+      final ECardSuit cardSuit = cardIterator.next().getSuit();
+      if (!cardSuit.equals(firstCardSuit)) {
+        allSameSuit = false;
+        break;
+      }
+    }
+    return allSameSuit;
   }
 }
