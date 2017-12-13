@@ -169,20 +169,27 @@ public final class HandEvaluator {
    */
   private static HandEvaluatorResult evaluateHand5(final Map<Card, Integer> hand) {
 
+    final List<ECardValue> cardValues = new ArrayList<>();
+    hand.keySet().forEach(card -> cardValues.add(card.getValue()));
+
     if (allSameSuit(hand.keySet())) {
       if (consecutiveValues(hand.keySet())) {
-        return HandEvaluatorResult.from(EHandOutcome.STRAIGHT_FLUSH);
+        final boolean aceAsOne = cardValues.contains(ECardValue.TWO)
+            && cardValues.contains(ECardValue.ACE);
+        return HandEvaluatorResult.from(EHandOutcome.STRAIGHT_FLUSH,
+            Lists.reverse(cardValues).get(aceAsOne ? cardValues.size() - 1 : 0));
       } else {
-        return HandEvaluatorResult.from(EHandOutcome.FLUSH);
+        return HandEvaluatorResult.from(EHandOutcome.FLUSH,
+            Lists.reverse(cardValues).toArray(new ECardValue[0]));
       }
     } else {
       if (consecutiveValues(hand.keySet())) {
-        return HandEvaluatorResult.from(EHandOutcome.STRAIGHT);
+        final boolean aceAsOne = cardValues.contains(ECardValue.TWO)
+            && cardValues.contains(ECardValue.ACE);
+        return HandEvaluatorResult.from(EHandOutcome.STRAIGHT,
+            Lists.reverse(cardValues).get(aceAsOne ? cardValues.size() - 1 : 0));
       }
     }
-
-    final List<ECardValue> cardValues = new ArrayList<>();
-    hand.keySet().forEach(card -> cardValues.add(card.getValue()));
 
     return HandEvaluatorResult.from(EHandOutcome.HIGH_CARD,
         Lists.reverse(cardValues).toArray(new ECardValue[0]));
