@@ -22,18 +22,41 @@ public enum ECardValue {
   KING('K', 13),
   ACE('A', 14);
 
+  /**
+   * The card identifier.
+   */
   private char cardId;
+
+  /**
+   * The card value.
+   */
   private int cardValue;
 
+  /**
+   * Enum constructor.
+   *
+   * @param cardId    the card identifier
+   * @param cardValue the card value
+   */
   ECardValue(final char cardId, final int cardValue) {
     this.cardId = cardId;
     this.cardValue = cardValue;
   }
 
+  /**
+   * The card identifier getter.
+   *
+   * @return the card identifier
+   */
   public char getCardId() {
     return cardId;
   }
 
+  /**
+   * The card value getter.
+   *
+   * @return the card value
+   */
   public int getCardValue() {
     return cardValue;
   }

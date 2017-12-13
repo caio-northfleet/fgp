@@ -3,6 +3,9 @@ package com.flaregames.poker;
 import com.flaregames.poker.datatypes.Card;
 import com.flaregames.poker.datatypes.Hand;
 import com.flaregames.poker.enums.EHandOutcome;
+import com.flaregames.poker.evaluator.HandEvaluator;
+import com.flaregames.poker.evaluator.HandEvaluatorResult;
+import com.flaregames.poker.exceptions.EvaluateHandException;
 import com.flaregames.poker.exceptions.InvalidCardInputException;
 import com.flaregames.poker.exceptions.InvalidHandSizeException;
 
@@ -22,7 +25,7 @@ public class PokerTest {
   @Test
   @SuppressWarnings("PMD.AvoidInstantiatingObjectsInLoops")
   public void testAllCombinations()
-      throws InvalidCardInputException, InvalidHandSizeException {
+      throws InvalidCardInputException, InvalidHandSizeException, EvaluateHandException {
 
     // all valid card suits and values
     final String suits = "CDHS";
@@ -33,8 +36,6 @@ public class PokerTest {
     for (final EHandOutcome outcome : EHandOutcome.values()) {
       counters.put(outcome, 0);
     }
-
-    final Poker poker = new Poker();
 
     // loop through all combinations of the deck cards per hand
     for (final int[] combination : new Combinations(DECK_SIZE, Hand.HAND_SIZE)) {
@@ -48,8 +49,8 @@ public class PokerTest {
       }
 
       // evaluate hand of cards and increment appropriate results counter
-      final EHandOutcome outcome = poker.evaluateHand(Hand.of(Arrays.asList(cards)));
-      counters.replace(outcome, counters.get(outcome) + 1);
+      final HandEvaluatorResult result = HandEvaluator.evaluateHand(Hand.of(Arrays.asList(cards)));
+      counters.replace(result.getHandOutcome(), counters.get(result.getHandOutcome()) + 1);
     }
 
     // assert counters (numbers got from http://suffe.cool/poker/evaluator.html)
@@ -71,14 +72,12 @@ public class PokerTest {
 
   @Test
   public void testCompareHands()
-      throws InvalidHandSizeException, InvalidCardInputException {
+      throws InvalidHandSizeException, InvalidCardInputException, EvaluateHandException {
 
     final String hand1 = "C5 D3 D4 S7 C6";
     final String hand2 = "DA D3 D5 H8 S8";
 
-    final Poker poker = new Poker();
-
-    Assertions.assertThat(poker.compareHands(hand1, hand2))
+    Assertions.assertThat(Poker.compareHands(hand1, hand2))
         .isEqualTo("1st hand wins! (Straight)");
   }
 }
