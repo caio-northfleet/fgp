@@ -1,1 +1,2 @@
-# fgp
+# Poker hands comparison!
+
