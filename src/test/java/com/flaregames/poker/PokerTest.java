@@ -72,12 +72,18 @@ public class PokerTest {
 
   @Test
   public void testCompareHands()
-      throws InvalidHandSizeException, InvalidCardInputException, EvaluateHandException {
+      throws InvalidCardInputException, EvaluateHandException {
 
-    final String hand1 = "C5 D3 D4 S7 C6";
-    final String hand2 = "DA D3 D5 H8 S8";
+    final PokerTestUtil pokerTestUtil = new PokerTestUtil();
 
-    Assertions.assertThat(Poker.compareHands(hand1, hand2))
-        .isEqualTo("1st hand wins! (Straight)");
+    pokerTestUtil.compareStraightFlush();
+    pokerTestUtil.compareFourOfAKind();
+    pokerTestUtil.compareFullHouse();
+    pokerTestUtil.compareFlush();
+    pokerTestUtil.compareStraight();
+    pokerTestUtil.compareThreeOfAKind();
+    pokerTestUtil.compareTwoPairs();
+    pokerTestUtil.comparePair();
+    pokerTestUtil.compareHighCard();
   }
 }

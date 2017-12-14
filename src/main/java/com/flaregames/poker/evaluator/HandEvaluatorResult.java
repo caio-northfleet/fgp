@@ -1,7 +1,10 @@
 package com.flaregames.poker.evaluator;
 
+import com.google.common.base.Objects;
+
 import com.flaregames.poker.enums.ECardValue;
 import com.flaregames.poker.enums.EHandOutcome;
+import com.flaregames.poker.exceptions.InvalidOutcomeCompositionException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -14,11 +17,19 @@ public final class HandEvaluatorResult implements Comparable<HandEvaluatorResult
   private HandEvaluatorResult() {
   }
 
-  static HandEvaluatorResult from(final EHandOutcome handOutcome, final ECardValue... cardValues) {
+  static HandEvaluatorResult from(final EHandOutcome handOutcome, final ECardValue... cardValues)
+      throws InvalidOutcomeCompositionException {
+
+    if (cardValues.length != handOutcome.getRequiredComparisonCards()) {
+      throw new InvalidOutcomeCompositionException(
+          String.format("Hand outcome [%s] requires [%d] cards to be correctly compared.",
+              handOutcome, handOutcome.getRequiredComparisonCards()));
+    }
 
     final HandEvaluatorResult handEvaluatorResult = new HandEvaluatorResult();
     handEvaluatorResult.handOutcome = handOutcome;
     handEvaluatorResult.tieDecreasingComparisonCards = Arrays.asList(cardValues);
+
     return handEvaluatorResult;
   }
 
@@ -26,8 +37,39 @@ public final class HandEvaluatorResult implements Comparable<HandEvaluatorResult
     return handOutcome;
   }
 
-  public List<ECardValue> getTieDecreasingComparisonCards() {
+  private List<ECardValue> getTieDecreasingComparisonCards() {
     return tieDecreasingComparisonCards;
+  }
+
+  /**
+   * Compares this object instance with another object to check if they are equal.
+   *
+   * @param obj object to compare
+   * @return {@code true} if objects are equal, {@code false} otherwise
+   */
+  @Override
+  public boolean equals(final Object obj) {
+    if (this == obj) {
+      return true;
+    }
+    if (!(obj instanceof HandEvaluatorResult)) {
+      return false;
+    }
+    final HandEvaluatorResult that = (HandEvaluatorResult) obj;
+    return Objects.equal(getHandOutcome(), that.getHandOutcome())
+        && Objects.equal(getTieDecreasingComparisonCards(), that.getTieDecreasingComparisonCards());
+  }
+
+  /**
+   * Generates an integer value from this object instance attributes.
+   *
+   * @return an integer representation of this object
+   */
+  @Override
+  public int hashCode() {
+    return Objects.hashCode(
+        getHandOutcome(),
+        getTieDecreasingComparisonCards());
   }
 
   @Override
@@ -40,40 +82,20 @@ public final class HandEvaluatorResult implements Comparable<HandEvaluatorResult
     if (other == null) {
       throw new NullPointerException();
     }
+
     if (this.getHandOutcome().compareTo(other.getHandOutcome()) > 0) {
       return 1;
     }
     if (this.getHandOutcome().compareTo(other.getHandOutcome()) < 0) {
       return -1;
     }
-    return tieComparison(this.getHandOutcome(), this.getTieDecreasingComparisonCards(),
-        other.getTieDecreasingComparisonCards());
-  }
 
-  private int tieComparison(final EHandOutcome tieOutcome, final List<ECardValue> values1,
-                            final List<ECardValue> values2) {
-
-    switch (tieOutcome) {
-      case HIGH_CARD:
-        break;
-      case PAIR:
-        break;
-      case TWO_PAIRS:
-        break;
-      case THREE_OF_A_KIND:
-        break;
-      case STRAIGHT:
-        break;
-      case FLUSH:
-        break;
-      case FULL_HOUSE:
-        break;
-      case FOUR_OF_A_KIND:
-        break;
-      case STRAIGHT_FLUSH:
-        break;
-      default:
-        break;
+    for (int i = 0; i < this.getHandOutcome().getRequiredComparisonCards(); i++) {
+      final int cardComparisonResult = this.getTieDecreasingComparisonCards().get(i)
+          .compareTo(other.getTieDecreasingComparisonCards().get(i));
+      if (cardComparisonResult != 0) {
+        return cardComparisonResult;
+      }
     }
 
     return 0;

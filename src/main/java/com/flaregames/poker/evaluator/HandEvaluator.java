@@ -8,6 +8,7 @@ import com.flaregames.poker.enums.ECardSuit;
 import com.flaregames.poker.enums.ECardValue;
 import com.flaregames.poker.enums.EHandOutcome;
 import com.flaregames.poker.exceptions.EvaluateHandException;
+import com.flaregames.poker.exceptions.InvalidOutcomeCompositionException;
 
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -42,21 +43,25 @@ public final class HandEvaluator {
       map.compute(card, (card1, count) -> count != null ? count + 1 : 1);
     }
 
-    // "Four of a Kind" or "Full House"
-    if (map.size() == 2) {
-      return evaluateHand2(map);
-    }
-    // "Three of a Kind" or "Two Pairs"
-    if (map.size() == 3) {
-      return evaluateHand3(map);
-    }
-    // "One Pair"
-    if (map.size() == 4) {
-      return evaluateHand4(map);
-    }
-    // "Straight", "Flush", "Straight Flush" or "High Card"
-    if (map.size() == 5) {
-      return evaluateHand5(map);
+    try {
+      // "Four of a Kind" or "Full House"
+      if (map.size() == 2) {
+        return evaluateHand2(map);
+      }
+      // "Three of a Kind" or "Two Pairs"
+      if (map.size() == 3) {
+        return evaluateHand3(map);
+      }
+      // "One Pair"
+      if (map.size() == 4) {
+        return evaluateHand4(map);
+      }
+      // "Straight", "Flush", "Straight Flush" or "High Card"
+      if (map.size() == 5) {
+        return evaluateHand5(map);
+      }
+    } catch (final InvalidOutcomeCompositionException ex) {
+      throw new EvaluateHandException(ex);
     }
 
     throw new EvaluateHandException("Weird behaviour analysing hand.");
@@ -68,8 +73,10 @@ public final class HandEvaluator {
    *
    * @param hand the Poker hand to be evaluated
    * @return a {@link HandEvaluatorResult} with the results of the Poker hand evaluation
+   * @throws InvalidOutcomeCompositionException if outcome instantiation is inconsistent
    */
-  private static HandEvaluatorResult evaluateHand2(final Map<Card, Integer> hand) {
+  private static HandEvaluatorResult evaluateHand2(final Map<Card, Integer> hand)
+      throws InvalidOutcomeCompositionException {
 
     final Map.Entry<Card, Integer> firstEntry = hand.entrySet().iterator().next();
     final Integer firstValue = firstEntry.getValue();
@@ -93,9 +100,11 @@ public final class HandEvaluator {
    *
    * @param hand the Poker hand to be evaluated
    * @return a {@link HandEvaluatorResult} with the results of the Poker hand evaluation
+   * @throws InvalidOutcomeCompositionException if outcome instantiation is inconsistent
+   * @throws EvaluateHandException              if hand data is inconsistent
    */
   private static HandEvaluatorResult evaluateHand3(final Map<Card, Integer> hand)
-      throws EvaluateHandException {
+      throws EvaluateHandException, InvalidOutcomeCompositionException {
 
     for (final Map.Entry<Card, Integer> entries : hand.entrySet()) {
       if (entries.getValue() == 3) {
@@ -137,11 +146,13 @@ public final class HandEvaluator {
    *
    * @param hand the Poker hand to be evaluated
    * @return a {@link HandEvaluatorResult} with the results of the Poker hand evaluation
+   * @throws InvalidOutcomeCompositionException if outcome instantiation is inconsistent
+   * @throws EvaluateHandException              if hand data is inconsistent
    */
   private static HandEvaluatorResult evaluateHand4(final Map<Card, Integer> hand)
-      throws EvaluateHandException {
+      throws EvaluateHandException, InvalidOutcomeCompositionException {
 
-    List<ECardValue> cardValues = new ArrayList<>();
+    final List<ECardValue> cardValues = new ArrayList<>();
     ECardValue pairCardValue = null;
     for (final Map.Entry<Card, Integer> entries : hand.entrySet()) {
       if (entries.getValue() == 2) {
@@ -166,33 +177,48 @@ public final class HandEvaluator {
    *
    * @param hand the Poker hand to be evaluated
    * @return a {@link HandEvaluatorResult} with the results of the Poker hand evaluation
+   * @throws InvalidOutcomeCompositionException if outcome instantiation is inconsistent
    */
-  private static HandEvaluatorResult evaluateHand5(final Map<Card, Integer> hand) {
+  private static HandEvaluatorResult evaluateHand5(final Map<Card, Integer> hand)
+      throws InvalidOutcomeCompositionException {
 
     final List<ECardValue> cardValues = new ArrayList<>();
     hand.keySet().forEach(card -> cardValues.add(card.getValue()));
 
     if (allSameSuit(hand.keySet())) {
       if (consecutiveValues(hand.keySet())) {
-        final boolean aceAsOne = cardValues.contains(ECardValue.TWO)
-            && cardValues.contains(ECardValue.ACE);
         return HandEvaluatorResult.from(EHandOutcome.STRAIGHT_FLUSH,
-            Lists.reverse(cardValues).get(aceAsOne ? cardValues.size() - 1 : 0));
+            getCardValueConsideringAce(cardValues));
       } else {
         return HandEvaluatorResult.from(EHandOutcome.FLUSH,
             Lists.reverse(cardValues).toArray(new ECardValue[0]));
       }
     } else {
       if (consecutiveValues(hand.keySet())) {
-        final boolean aceAsOne = cardValues.contains(ECardValue.TWO)
-            && cardValues.contains(ECardValue.ACE);
         return HandEvaluatorResult.from(EHandOutcome.STRAIGHT,
-            Lists.reverse(cardValues).get(aceAsOne ? cardValues.size() - 1 : 0));
+            getCardValueConsideringAce(cardValues));
       }
     }
-
     return HandEvaluatorResult.from(EHandOutcome.HIGH_CARD,
         Lists.reverse(cardValues).toArray(new ECardValue[0]));
+  }
+
+  /**
+   * Retrieve the highest card value from the provided list of card values considering the Ace could
+   * sometimes play the lowest, sometimes the highest card value.
+   *
+   * @param cardValues the list of cards
+   * @return the highest card value
+   */
+  private static ECardValue getCardValueConsideringAce(final List<ECardValue> cardValues) {
+
+    final boolean aceAsOne = cardValues.contains(ECardValue.TWO)
+        && cardValues.contains(ECardValue.ACE);
+
+    if (cardValues.contains(ECardValue.ACE) && aceAsOne) {
+      return cardValues.get(cardValues.size() - 2);
+    }
+    return cardValues.get(cardValues.size() - 1);
   }
 
   /**
@@ -222,6 +248,7 @@ public final class HandEvaluator {
       previousCardValue = cardValue;
       count++;
     }
+
     return consecutiveValues;
   }
 
@@ -232,6 +259,7 @@ public final class HandEvaluator {
    * @return whether or not the supplied cards all have the same suit
    */
   private static boolean allSameSuit(final Set<Card> cards) {
+
     final Iterator<Card> cardIterator = cards.iterator();
     final ECardSuit firstCardSuit = cardIterator.next().getSuit();
     boolean allSameSuit = true;
@@ -242,6 +270,7 @@ public final class HandEvaluator {
         break;
       }
     }
+
     return allSameSuit;
   }
 }

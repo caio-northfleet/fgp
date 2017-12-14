@@ -62,7 +62,7 @@ public final class Poker {
   }
 
   static String compareHands(final String rawHandInput1, final String rawHandInput2)
-      throws InvalidHandSizeException, InvalidCardInputException, EvaluateHandException {
+      throws InvalidCardInputException, EvaluateHandException {
 
     final HandEvaluatorResult result1 =
         HandEvaluator.evaluateHand(validateAndProcessInput(rawHandInput1));
@@ -79,7 +79,7 @@ public final class Poker {
   }
 
   private static Hand validateAndProcessInput(final String rawHandInput)
-      throws InvalidHandSizeException, InvalidCardInputException {
+      throws InvalidCardInputException {
 
     final Card[] cards = new Card[Hand.HAND_SIZE];
 
@@ -93,6 +93,10 @@ public final class Poker {
       cards[i] = Card.from(matcher.group());
     }
 
-    return Hand.of(Arrays.asList(cards));
+    try {
+      return Hand.of(Arrays.asList(cards));
+    } catch (final InvalidHandSizeException ex) {
+      throw new InvalidCardInputException(ex);
+    }
   }
 }

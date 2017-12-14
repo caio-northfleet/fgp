@@ -14,4 +14,13 @@ public abstract class PokerException extends Exception {
   PokerException(final String message) {
     super(message);
   }
+
+  /**
+   * Constructs a new exception with the specified cause.
+   *
+   * @param cause the cause
+   */
+  PokerException(final Throwable cause) {
+    super(cause);
+  }
 }

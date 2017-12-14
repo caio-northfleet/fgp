@@ -14,4 +14,13 @@ public final class InvalidCardInputException extends PokerException {
   public InvalidCardInputException(final String message) {
     super(message);
   }
+
+  /**
+   * Constructs a new exception with the specified cause.
+   *
+   * @param cause the cause
+   */
+  public InvalidCardInputException(final Throwable cause) {
+    super(cause);
+  }
 }

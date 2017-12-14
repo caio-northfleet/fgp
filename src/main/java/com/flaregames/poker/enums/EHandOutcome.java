@@ -4,15 +4,25 @@ import com.google.common.base.Ascii;
 
 public enum EHandOutcome {
 
-  HIGH_CARD,
-  PAIR,
-  TWO_PAIRS,
-  THREE_OF_A_KIND,
-  STRAIGHT,
-  FLUSH,
-  FULL_HOUSE,
-  FOUR_OF_A_KIND,
-  STRAIGHT_FLUSH;
+  HIGH_CARD(5),
+  PAIR(4),
+  TWO_PAIRS(3),
+  THREE_OF_A_KIND(1),
+  STRAIGHT(1),
+  FLUSH(5),
+  FULL_HOUSE(1),
+  FOUR_OF_A_KIND(1),
+  STRAIGHT_FLUSH(1);
+
+  private int requiredComparisonCards;
+
+  EHandOutcome(final int requiredComparisonCards) {
+    this.requiredComparisonCards = requiredComparisonCards;
+  }
+
+  public int getRequiredComparisonCards() {
+    return requiredComparisonCards;
+  }
 
   @Override
   public String toString() {
@@ -20,9 +30,8 @@ public enum EHandOutcome {
     final char[] original = this.name().toCharArray();
 
     final StringBuilder out = new StringBuilder(original.length);
-    out.append(original[0]);
-    for (int i = 1; i < original.length; i++) {
-      out.append(original[i] == '_' ? ' ' : Ascii.toLowerCase(original[i]));
+    for (final char part : original) {
+      out.append(part == '_' ? ' ' : Ascii.toLowerCase(part));
     }
 
     return out.toString();

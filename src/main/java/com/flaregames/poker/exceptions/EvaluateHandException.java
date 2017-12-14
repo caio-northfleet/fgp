@@ -14,4 +14,13 @@ public final class EvaluateHandException extends PokerException {
   public EvaluateHandException(final String message) {
     super(message);
   }
+
+  /**
+   * Constructs a new exception with the specified cause.
+   *
+   * @param cause the cause
+   */
+  public EvaluateHandException(final Throwable cause) {
+    super(cause);
+  }
 }
